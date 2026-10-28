@@ -57,3 +57,33 @@ if [ ${#targets[@]} -eq 0 ]; then
     usage >&2
     exit 2
 fi
+
+# convert_file <src>
+# Convert a single HEIC/HEIF file. The output keeps the source's base name
+# and is written to the same directory.
+convert_file() {
+    local src=$1
+    local dir base out
+
+    dir=$(dirname "$src")
+    base=$(basename "$src")
+    base=${base%.*}
+    out="$dir/$base.$ext"
+
+    if [ -e "$out" ] && [ "$force" -ne 1 ]; then
+        err "skip: '$out' already exists (use --force to overwrite)"
+        return 1
+    fi
+
+    local opts=(-s format "$format")
+    if [ "$format" = "jpeg" ]; then
+        opts+=(-s formatOptions best)
+    fi
+
+    if ! sips "${opts[@]}" "$src" --out "$out" >/dev/null 2>&1; then
+        err "failed to convert '$src'"
+        return 1
+    fi
+
+    printf '%s -> %s\n' "$src" "$out"
+}
