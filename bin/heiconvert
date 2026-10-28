@@ -87,3 +87,30 @@ convert_file() {
 
     printf '%s -> %s\n' "$src" "$out"
 }
+
+# is_heic <path>
+# Succeed if the path has a .heic or .heif extension (case-insensitive).
+is_heic() {
+    case "$1" in
+        *.[Hh][Ee][Ii][Cc]|*.[Hh][Ee][Ii][Ff]) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+status=0
+
+for target in "${targets[@]}"; do
+    if [ -f "$target" ]; then
+        if ! is_heic "$target"; then
+            err "skip: '$target' is not a HEIC/HEIF file"
+            status=1
+            continue
+        fi
+        convert_file "$target" || status=1
+    else
+        err "no such file or directory: '$target'"
+        status=1
+    fi
+done
+
+exit $status
