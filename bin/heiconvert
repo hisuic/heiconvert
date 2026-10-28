@@ -97,6 +97,25 @@ is_heic() {
     esac
 }
 
+# convert_dir <dir>
+# Convert every HEIC/HEIF file directly inside a directory (not recursive).
+convert_dir() {
+    local dir=${1%/}
+    local rc=0 found=0 f
+
+    for f in "$dir"/*; do
+        [ -f "$f" ] && is_heic "$f" || continue
+        found=1
+        convert_file "$f" || rc=1
+    done
+
+    if [ "$found" -eq 0 ]; then
+        err "no HEIC/HEIF files found in '$dir'"
+        return 1
+    fi
+    return $rc
+}
+
 status=0
 
 for target in "${targets[@]}"; do
@@ -107,6 +126,8 @@ for target in "${targets[@]}"; do
             continue
         fi
         convert_file "$target" || status=1
+    elif [ -d "$target" ]; then
+        convert_dir "$target" || status=1
     else
         err "no such file or directory: '$target'"
         status=1
