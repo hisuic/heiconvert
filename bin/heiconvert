@@ -58,6 +58,11 @@ if [ ${#targets[@]} -eq 0 ]; then
     exit 2
 fi
 
+if ! command -v sips >/dev/null 2>&1; then
+    err "'sips' not found; this tool requires macOS"
+    exit 1
+fi
+
 # convert_file <src>
 # Convert a single HEIC/HEIF file. The output keeps the source's base name
 # and is written to the same directory.
