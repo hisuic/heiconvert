@@ -1,0 +1,59 @@
+#!/bin/bash
+#
+# heiconvert - convert HEIC/HEIF images to JPEG, PNG or PDF on macOS.
+#
+# Uses the built-in `sips` command, so no extra dependencies are needed.
+# Output files are written next to the source files with the same base name.
+
+set -u
+
+PROG=$(basename "$0")
+VERSION="1.0.0"
+
+usage() {
+    cat <<EOF
+Usage: $PROG [options] <file.heic | directory>...
+
+Convert HEIC/HEIF images to JPEG (default), PNG or PDF, keeping the
+original pixel dimensions. Converted files are saved in the same
+directory as the source. When a directory is given, every HEIC/HEIF
+file directly inside it is converted.
+
+Options:
+  --jpg, --jpeg   Convert to JPEG (default)
+  --png           Convert to PNG
+  --pdf           Convert to PDF
+  -f, --force     Overwrite existing output files
+  -h, --help      Show this help and exit
+  -v, --version   Show version and exit
+EOF
+}
+
+err() {
+    printf '%s: %s\n' "$PROG" "$*" >&2
+}
+
+format="jpeg"
+ext="jpg"
+force=0
+targets=()
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --jpg|--jpeg) format="jpeg"; ext="jpg" ;;
+        --png)        format="png";  ext="png" ;;
+        --pdf)        format="pdf";  ext="pdf" ;;
+        -f|--force)   force=1 ;;
+        -h|--help)    usage; exit 0 ;;
+        -v|--version) echo "$PROG $VERSION"; exit 0 ;;
+        --)           shift; while [ $# -gt 0 ]; do targets+=("$1"); shift; done; break ;;
+        -*)           err "unknown option: $1"; usage >&2; exit 2 ;;
+        *)            targets+=("$1") ;;
+    esac
+    shift
+done
+
+if [ ${#targets[@]} -eq 0 ]; then
+    usage >&2
+    exit 2
+fi
